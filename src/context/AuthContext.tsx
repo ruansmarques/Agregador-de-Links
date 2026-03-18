@@ -64,8 +64,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        console.log('Login cancelado pelo usuário.');
+      } else {
+        console.error('Login error:', error);
+      }
     }
   };
 
