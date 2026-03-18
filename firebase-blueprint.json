@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Public profile information for a user.",
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "Unique username for the public URL."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name shown on the profile."
+        },
+        "bio": {
+          "type": "string",
+          "description": "Short biography."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL to the user's avatar."
+        },
+        "theme": {
+          "type": "string",
+          "description": "Theme color or style."
+        }
+      },
+      "required": ["username", "displayName"]
+    },
+    "Link": {
+      "title": "Link",
+      "description": "A single link entry on the user's profile.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The text displayed for the link."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "The destination URL."
+        },
+        "order": {
+          "type": "number",
+          "description": "Sorting order."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the link is visible to the public."
+        },
+        "createdAt": {
+          "type": "timestamp",
+          "description": "When the link was created."
+        }
+      },
+      "required": ["title", "url", "order", "isActive", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Stores user profile data."
+    },
+    "users/{userId}/links/{linkId}": {
+      "schema": {
+        "$ref": "#/entities/Link"
+      },
+      "description": "Stores individual links for a user."
+    }
+  }
+}
