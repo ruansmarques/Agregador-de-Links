@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Stethoscope, Link as LinkIcon, ArrowRight } from 'lucide-react';
 
 export default function Landing() {
-  const { user, profile, login } = useAuth();
+  const { user, profile, login, authError } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -31,6 +31,11 @@ export default function Landing() {
         </p>
 
         <div className="pt-8 space-y-4">
+          {authError && (
+            <div className="p-4 bg-red-50 text-red-700 text-sm rounded-xl border border-red-200">
+              {authError}
+            </div>
+          )}
           <button
             onClick={handleLogin}
             className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"

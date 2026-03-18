@@ -15,6 +15,7 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  authError: string | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -38,14 +40,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setProfile(docSnap.data() as UserProfile);
           } else {
             // Create default profile
-            const defaultUsername = currentUser.email?.split('@')[0].replace(/[^a-z0-9_]/g, '') || `user_${currentUser.uid.slice(0, 5)}`;
+            let defaultUsername = currentUser.email?.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') || `user_${currentUser.uid.slice(0, 5)}`;
+            if (defaultUsername.length < 3) defaultUsername = `user_${defaultUsername}`;
+            if (defaultUsername.length > 30) defaultUsername = defaultUsername.slice(0, 30);
+
             const newProfile: UserProfile = {
               username: defaultUsername,
-              displayName: currentUser.displayName || 'New User',
-              photoURL: currentUser.photoURL || '',
-              bio: 'Medical student organizing study materials.',
+              displayName: (currentUser.displayName || 'New User').slice(0, 50),
+              bio: 'Estudante de Medicina',
               theme: 'light',
             };
+            
+            if (currentUser.photoURL) {
+              newProfile.photoURL = currentUser.photoURL;
+            }
+
             await setDoc(docRef, newProfile);
             setProfile(newProfile);
           }
@@ -62,13 +71,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async () => {
+    setAuthError(null);
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user') {
         console.log('Login cancelado pelo usuário.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setAuthError('Domínio não autorizado. Adicione bio.medferpa.com no Firebase Console > Authentication > Settings > Authorized domains.');
       } else {
         console.error('Login error:', error);
+        setAuthError(error.message || 'Erro ao fazer login.');
       }
     }
   };
@@ -90,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, login, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, authError, login, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
