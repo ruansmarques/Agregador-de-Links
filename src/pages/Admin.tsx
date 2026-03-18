@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { Plus, Trash2, GripVertical, ExternalLink, LogOut, Save } from 'lucide-react';
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, where, getDocs } from 'firebase/firestore';
+import { Plus, Trash2, GripVertical, ExternalLink, LogOut, Save, Copy, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 interface LinkItem {
@@ -22,7 +22,9 @@ export default function Admin() {
   const [newUrl, setNewUrl] = useState('');
   const [bio, setBio] = useState(profile?.bio || '');
   const [displayName, setDisplayName] = useState(profile?.displayName || '');
+  const [username, setUsername] = useState(profile?.username || '');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -46,6 +48,7 @@ export default function Admin() {
     if (profile) {
       setBio(profile.bio || '');
       setDisplayName(profile.displayName || '');
+      setUsername(profile.username || '');
     }
   }, [profile]);
 
@@ -89,14 +92,32 @@ export default function Admin() {
   };
 
   const handleSaveProfile = async () => {
+    if (!/^[a-z0-9_]+$/.test(username)) {
+      alert('O ID deve conter apenas letras minúsculas, números e sublinhados (_).');
+      return;
+    }
     setIsSavingProfile(true);
     try {
-      await updateProfile({ displayName, bio });
+      const q = query(collection(db, 'users'), where('username', '==', username));
+      const snapshot = await getDocs(q);
+      const isTaken = snapshot.docs.some(d => d.id !== user?.uid);
+      if (isTaken) {
+        alert('Este ID já está em uso. Escolha outro.');
+        setIsSavingProfile(false);
+        return;
+      }
+      await updateProfile({ displayName, bio, username });
     } catch (error) {
       console.error('Error saving profile:', error);
     } finally {
       setIsSavingProfile(false);
     }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(`https://bio.medferpa.com/${profile?.username}`);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
   };
 
   if (!user || !profile) return <div className="p-8 text-center">Carregando...</div>;
@@ -108,7 +129,7 @@ export default function Admin() {
           <h1 className="font-bold text-xl text-slate-900">Painel Admin</h1>
           <div className="flex items-center gap-4">
             <Link
-              to={`/${user.uid}`}
+              to={`/${profile.username}`}
               target="_blank"
               className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
             >
@@ -150,14 +171,39 @@ export default function Admin() {
                 placeholder="Ex: Estudante de Medicina - Turma 2026"
               />
             </div>
-            <button
-              onClick={handleSaveProfile}
-              disabled={isSavingProfile}
-              className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-50"
-            >
-              <Save className="w-4 h-4" />
-              {isSavingProfile ? 'Salvando...' : 'Salvar Perfil'}
-            </button>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Link do Perfil (ID)</label>
+              <div className="flex rounded-xl shadow-sm">
+                <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-slate-200 bg-slate-50 text-slate-500 sm:text-sm">
+                  bio.medferpa.com/
+                </span>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  className="flex-1 min-w-0 block w-full px-4 py-2 rounded-none rounded-r-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={handleSaveProfile}
+                disabled={isSavingProfile}
+                className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {isSavingProfile ? 'Salvando...' : 'Salvar Perfil'}
+              </button>
+              
+              <button
+                onClick={handleCopyLink}
+                className="flex items-center gap-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-4 py-2 rounded-xl font-medium transition-colors"
+                type="button"
+              >
+                {copySuccess ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copySuccess ? 'Copiado!' : 'Copiar Link'}
+              </button>
+            </div>
           </div>
         </section>
 

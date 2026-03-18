@@ -105,7 +105,7 @@ service cloud.firestore {
       
       // Only owner can create/update their profile
       allow create: if isOwner(userId) && isValidUser();
-      allow update: if isOwner(userId) && isValidUser() && areImmutableFieldsUnchanged(['username']); // Don't allow changing username easily to prevent broken links
+      allow update: if isOwner(userId) && isValidUser();
       allow delete: if isOwner(userId);
       
       match /links/{linkId} {

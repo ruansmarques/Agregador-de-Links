@@ -12,7 +12,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/:userId" element={<Profile />} />
+          <Route path="/:username" element={<Profile />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

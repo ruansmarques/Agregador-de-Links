@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Stethoscope, Link as LinkIcon, ArrowRight } from 'lucide-react';
 
 export default function Landing() {
-  const { user, login } = useAuth();
+  const { user, profile, login } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -41,7 +41,7 @@ export default function Landing() {
           
           {user && (
             <Link
-              to={`/${user.uid}`}
+              to={`/${profile?.username || user.uid}`}
               className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-xl font-medium transition-colors"
             >
               <LinkIcon className="w-5 h-5" />

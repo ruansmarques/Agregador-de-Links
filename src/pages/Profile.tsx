@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
 import { ExternalLink, Stethoscope } from 'lucide-react';
 
 interface UserProfile {
@@ -21,7 +21,7 @@ interface LinkItem {
 }
 
 export default function Profile() {
-  const { userId } = useParams<{ userId: string }>();
+  const { username } = useParams<{ username: string }>();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,19 +29,22 @@ export default function Profile() {
 
   useEffect(() => {
     const fetchProfileAndLinks = async () => {
-      if (!userId) return;
+      if (!username) return;
       
       try {
         // Fetch profile
-        const docRef = doc(db, 'users', userId);
-        const docSnap = await getDoc(docRef);
+        const usersRef = collection(db, 'users');
+        const qUser = query(usersRef, where('username', '==', username), limit(1));
+        const userSnap = await getDocs(qUser);
         
-        if (docSnap.exists()) {
-          setProfile(docSnap.data() as UserProfile);
+        if (!userSnap.empty) {
+          const userDoc = userSnap.docs[0];
+          setProfile(userDoc.data() as UserProfile);
+          const actualUserId = userDoc.id;
           
           // Fetch active links
           const q = query(
-            collection(db, 'users', userId, 'links'),
+            collection(db, 'users', actualUserId, 'links'),
             where('isActive', '==', true),
             orderBy('order', 'asc')
           );
@@ -65,7 +68,7 @@ export default function Profile() {
     };
 
     fetchProfileAndLinks();
-  }, [userId]);
+  }, [username]);
 
   if (loading) {
     return (
