@@ -24,7 +24,7 @@ export default function Landing() {
         </div>
         
         <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
-          MedLinks
+          Links MedFerpa
         </h1>
         <p className="text-lg text-slate-600">
           Organize e compartilhe seus drives e materiais de medicina com seus colegas de faculdade.

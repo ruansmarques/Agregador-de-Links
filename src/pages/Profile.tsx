@@ -146,7 +146,7 @@ export default function Profile() {
         <div className="pt-12 pb-8 text-center">
           <a href="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-slate-600 transition-colors">
             <Stethoscope className="w-4 h-4" />
-            Criado com MedLinks
+            Criado com Links MedFerpa
           </a>
         </div>
       </div>
